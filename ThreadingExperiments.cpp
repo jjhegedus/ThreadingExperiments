@@ -12,6 +12,7 @@
 //#include "ItemProcessor.h"
 #include "ProcessorGroup.h"
 #include "NamedItemStore.h"
+#include "Scheduler.h"
 
 
 void TestPrioritizedStagedProcessing() {
@@ -232,10 +233,53 @@ void AddItemToStore(ndtech::NamedItemStore<ItemType>* store, std::string name, I
 
 int main()
 {
+
   // This is the ui thread
   // all background work must happen on background tasks
 
   std::cout << "main threadId = " << std::this_thread::get_id() << std::endl;
+
+  ndtech::Scheduler m_scheduler;
+
+
+  m_scheduler.AddTask(
+    std::pair<std::function<void(void)>, time_point<system_clock>>{
+    []() {
+      auto now = std::chrono::system_clock::now();
+      auto now_c = std::chrono::system_clock::to_time_t(now);
+      std::stringstream ss;
+      ss << "Inside Task2: time is " << std::ctime(&now_c) << std::endl;
+      std::cout << ss.str().c_str();
+      //DebugOutput(ss.str().c_str());
+    },
+      system_clock::now() + 3s
+  });
+
+  m_scheduler.AddTask(
+    std::pair<std::function<void(void)>, time_point<system_clock>>{
+    []() {
+      std::stringstream ss;
+      auto now = std::chrono::system_clock::now();
+      auto now_c = std::chrono::system_clock::to_time_t(now);
+      ss << "Inside Task1: time is " << std::ctime(&now_c) << std::endl;
+      std::cout << ss.str().c_str();
+      //DebugOutput(ss.str().c_str());
+    },
+      system_clock::now()
+  });
+
+  m_scheduler.AddTask(
+    std::pair<std::function<void(void)>, time_point<system_clock>>{
+    []() {
+      std::stringstream ss;
+      auto now = std::chrono::system_clock::now();
+      auto now_c = std::chrono::system_clock::to_time_t(now);
+      ss << "Inside Task3: time is " << std::ctime(&now_c) << std::endl;
+      std::cout << ss.str().c_str();
+      //DebugOutput(ss.str().c_str());
+    },
+      system_clock::now() + 1s
+  });
 
   //TestPrioritizedStagedProcessing();
   //TestProcessorGroup();
@@ -285,8 +329,10 @@ int main()
   std::string item1Result = store.GetItem("item1");
   std::cout << "Got item1" << std::endl;
 
+  m_scheduler.Join();
   store.Join();
   std::cout << "Processing thread joined. UI thread preparing to exit" << std::endl;
+
 
   return 0;
 }

@@ -35,7 +35,12 @@ namespace ndtech {
         std::unique_lock<std::mutex> lockGuard(m_waitMutex);
 
         while (m_wakeTime > system_clock::now()) {
-          m_conditionVariable.wait_until(lockGuard, m_wakeTime, [this]() {return m_wakeTime > system_clock::now(); });
+          m_conditionVariable.wait_until(lockGuard, m_wakeTime, [this]() {return m_wakeTime <= system_clock::now(); });
+          std::stringstream ss;
+          auto now = std::chrono::system_clock::now();
+          auto now_c = std::chrono::system_clock::to_time_t(now);
+          ss << "Inside Scheduler::Run : time is " << std::ctime(&now_c) << std::endl;
+          std::cout << ss.str().c_str();
         }
 
         ProcessReadyTasks();
@@ -77,7 +82,7 @@ namespace ndtech {
         m_wakeTime = m_tasks[0].second;
       }
       else {
-        m_wakeTime = system_clock::now() + 100ms;
+        m_wakeTime = system_clock::now() + 1000ms;
       }
     }
 
