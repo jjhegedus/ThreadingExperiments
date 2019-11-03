@@ -281,6 +281,32 @@ int main()
       system_clock::now() + 1s
   });
 
+  m_scheduler.AddRepeatingTask(
+    []() {
+      std::stringstream ss;
+      auto now = std::chrono::system_clock::now();
+      auto now_c = std::chrono::system_clock::to_time_t(now);
+      ss << "Inside RepeatingTask1: time is " << std::ctime(&now_c) << std::endl;
+      std::cout << ss.str().c_str();
+      //DebugOutput(ss.str().c_str());
+    },
+      1000ms,
+      system_clock::now() + 5s
+  );
+
+  m_scheduler.AddRepeatingTask(
+    []() {
+      std::stringstream ss;
+      auto now = std::chrono::system_clock::now();
+      auto now_c = std::chrono::system_clock::to_time_t(now);
+      ss << "Inside RepeatingTask2: time is " << std::ctime(&now_c) << std::endl;
+      std::cout << ss.str().c_str();
+      //DebugOutput(ss.str().c_str());
+    },
+    2000ms,
+      system_clock::now() + 10s
+      );
+
   //TestPrioritizedStagedProcessing();
   //TestProcessorGroup();
 
